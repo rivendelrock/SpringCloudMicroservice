@@ -2,8 +2,10 @@ package com.rocio.springcloud.msvc.products.services;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,11 +18,20 @@ public class ProductServiceImpl implements ProductService {
     @Autowired
     private ProductRepository repository;
 
+    final private Environment environment;
+    public ProductServiceImpl (Environment environment){
+        this.environment = environment;
+    }
+
     @Override
     @Transactional(readOnly = true)
     public List<Product> findAll() {
 
-        return (List<Product>)repository.findAll();
+        return ((List<Product>) repository.findAll()).stream()
+        .map(product -> {
+            product.setPort (Integer.parseInt(environment.getProperty("local.server.port")));
+            return product;   
+        }).collect(Collectors.toList());
     }
 
     @Override
